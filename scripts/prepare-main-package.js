@@ -39,31 +39,15 @@ function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
 }
 
-function prepareMainPackage(packageName, version) {
+function prepareMainPackage(packageName) {
   const distDir = path.join(__dirname, '..', 'dist');
   const sourcePackageDir = path.join(__dirname, '..', 'packages', packageName);
   const mainPackageDir = path.join(distDir, packageName);
 
-  // Detect version from platform packages if not specified
-  let baseVersion = version;
-  if (!baseVersion) {
-    for (const platform of PLATFORMS) {
-      const versionFile = path.join(distDir, `${packageName}-${platform}`, '.version');
-      if (fs.existsSync(versionFile)) {
-        baseVersion = fs.readFileSync(versionFile, 'utf-8').trim();
-        console.log(`Detected version from ${platform}: ${baseVersion}`);
-        break;
-      }
-    }
-  }
-
-  if (!baseVersion) {
-    // Fallback: get from npm
-    baseVersion = execSync(`npm view @xpack-dev-tools/${packageName} version`, {
-      encoding: 'utf-8',
-    }).trim().split('-')[0];
-    console.log(`Using version from npm: ${baseVersion}`);
-  }
+  // Read version from main package
+  const sourcePackageJson = readJson(path.join(sourcePackageDir, 'package.json'));
+  const baseVersion = sourcePackageJson.version;
+  console.log(`Using version from main package: ${baseVersion}`);
 
   console.log(`\nPreparing main package ${packageName} v${baseVersion}\n`);
 
@@ -85,11 +69,10 @@ function prepareMainPackage(packageName, version) {
 
   packageJson.version = baseVersion;
 
-  // Update optionalDependencies versions
-  if (packageJson.optionalDependencies) {
-    for (const dep of Object.keys(packageJson.optionalDependencies)) {
-      packageJson.optionalDependencies[dep] = baseVersion;
-    }
+  // Inject optionalDependencies for all platforms
+  packageJson.optionalDependencies = {};
+  for (const platform of PLATFORMS) {
+    packageJson.optionalDependencies[`${SCOPE}/${packageName}-${platform}`] = baseVersion;
   }
 
   writeJson(packageJsonPath, packageJson);
@@ -113,20 +96,16 @@ function prepareMainPackage(packageName, version) {
 // Parse arguments
 const args = process.argv.slice(2);
 let packageName = null;
-let version = null;
 
 for (let i = 0; i < args.length; i++) {
-  if (args[i] === '--version' && args[i + 1]) {
-    version = args[i + 1];
-    i++;
-  } else if (!args[i].startsWith('-')) {
+  if (!args[i].startsWith('-')) {
     packageName = args[i];
   }
 }
 
 if (!packageName) {
-  console.log('Usage: node scripts/prepare-main-package.js <package-name> [--version <version>]');
+  console.log('Usage: node scripts/prepare-main-package.js <package-name>');
   process.exit(1);
 }
 
-prepareMainPackage(packageName, version);
+prepareMainPackage(packageName);

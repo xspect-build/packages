@@ -7,10 +7,6 @@ on:
         description: 'Package to build (e.g., patchelf)'
         required: true
         type: string
-      version:
-        description: 'Version to build (leave empty for latest)'
-        required: false
-        type: string
       publish:
         description: 'Publish to npm'
         required: false
@@ -47,7 +43,7 @@ jobs:
         run: npm install -g xpm@latest
 
       - name: Build platform package
-        run: node scripts/build-platform.js ${{ inputs.package }} ${{ matrix.platform }} ${{ inputs.version && format('--version {0}', inputs.version) || '' }}
+        run: node scripts/build-platform.js ${{ inputs.package }} ${{ matrix.platform }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -75,7 +71,7 @@ jobs:
           path: dist/
 
       - name: Prepare main package
-        run: node scripts/prepare-main-package.js ${{ inputs.package }} ${{ inputs.version && format('--version {0}', inputs.version) || '' }}
+        run: node scripts/prepare-main-package.js ${{ inputs.package }}
 
       - name: Upload main package
         uses: actions/upload-artifact@v4

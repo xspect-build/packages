@@ -5,10 +5,10 @@
  * This script is designed to run in CI on the target platform.
  * 
  * Usage:
- *   node scripts/build-platform.js <package-name> <platform> [--version <version>]
+ *   node scripts/build-platform.js <package-name> <platform>
  * 
  * Example:
- *   node scripts/build-platform.js patchelf linux-x64 --version 0.18.0
+ *   node scripts/build-platform.js patchelf linux-x64
  */
 
 const { execSync } = require('child_process');
@@ -19,6 +19,7 @@ const path = require('path');
 const PACKAGES = {
   patchelf: {
     xpackName: '@xpack-dev-tools/patchelf',
+    xpackVersion: '0.18.0-1.1',
     binaries: ['patchelf'],
   },
   // Add more packages here as needed
@@ -71,7 +72,20 @@ function writeJson(filePath, data) {
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2) + '\n');
 }
 
-async function buildPlatformPackage(packageName, platform, version) {
+function readJson(filePath) {
+  return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+}
+
+function getMainPackageVersion(packageName) {
+  const mainPackageJsonPath = path.join(__dirname, '..', 'packages', packageName, 'package.json');
+  if (!fs.existsSync(mainPackageJsonPath)) {
+    throw new Error(`Main package not found: ${mainPackageJsonPath}`);
+  }
+  const packageJson = readJson(mainPackageJsonPath);
+  return packageJson.version;
+}
+
+async function buildPlatformPackage(packageName, platform) {
   const config = PACKAGES[packageName];
   if (!config) {
     console.error(`Unknown package: ${packageName}`);
@@ -97,16 +111,9 @@ async function buildPlatformPackage(packageName, platform, version) {
   }
   ensureDir(tempDir);
 
-  // Get the xpack version if not specified
-  let xpackVersion = version;
-  if (!xpackVersion) {
-    const npmInfo = runCapture(`npm view ${config.xpackName} version`);
-    xpackVersion = npmInfo;
-    console.log(`Using latest xpack version: ${xpackVersion}`);
-  }
-
-  // Extract base version (e.g., "0.18.0" from "0.18.0-1.1")
-  const baseVersion = xpackVersion.split('-')[0];
+  // Get version from main package
+  const baseVersion = getMainPackageVersion(packageName);
+  console.log(`Using version from main package: ${baseVersion}`);
 
   console.log(`\nBuilding ${packageName} v${baseVersion} for ${platform}\n`);
 
@@ -133,7 +140,7 @@ async function buildPlatformPackage(packageName, platform, version) {
   });
 
   // Install the xpack using xpm
-  run(`npx xpm install ${config.xpackName}@${xpackVersion} --verbose`, {
+  run(`npx xpm install ${config.xpackName}@${config.xpackVersion} --verbose`, {
     cwd: tempDir,
   });
 
@@ -227,13 +234,9 @@ async function buildPlatformPackage(packageName, platform, version) {
 const args = process.argv.slice(2);
 let packageName = null;
 let platform = null;
-let version = null;
 
 for (let i = 0; i < args.length; i++) {
-  if (args[i] === '--version' && args[i + 1]) {
-    version = args[i + 1];
-    i++;
-  } else if (!args[i].startsWith('-')) {
+  if (!args[i].startsWith('-')) {
     if (!packageName) {
       packageName = args[i];
     } else if (!platform) {
@@ -243,7 +246,7 @@ for (let i = 0; i < args.length; i++) {
 }
 
 if (!packageName || !platform) {
-  console.log('Usage: node scripts/build-platform.js <package-name> <platform> [--version <version>]');
+  console.log('Usage: node scripts/build-platform.js <package-name> <platform>');
   console.log('');
   console.log('Available packages:');
   for (const name of Object.keys(PACKAGES)) {
@@ -254,4 +257,4 @@ if (!packageName || !platform) {
   process.exit(1);
 }
 
-buildPlatformPackage(packageName, platform, version);
+buildPlatformPackage(packageName, platform);

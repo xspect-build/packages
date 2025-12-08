@@ -14,13 +14,6 @@
     "lib",
     "bin"
   ],
-  "optionalDependencies": {
-    "@xspect-build/patchelf-darwin-arm64": "0.18.0",
-    "@xspect-build/patchelf-darwin-x64": "0.18.0",
-    "@xspect-build/patchelf-linux-arm64": "0.18.0",
-    "@xspect-build/patchelf-linux-arm": "0.18.0",
-    "@xspect-build/patchelf-linux-x64": "0.18.0"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/xspect-build/packages.git"
