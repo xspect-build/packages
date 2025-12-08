@@ -1,5 +1,5 @@
 {
-  "name": "xpack-prebuilt",
+  "name": "@xspect-build/packages",
   "version": "1.0.0",
   "private": true,
   "description": "Prebuilt xPack binaries distributed via npm",

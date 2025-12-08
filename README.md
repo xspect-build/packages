@@ -1,4 +1,4 @@
-# xpack-prebuilt
+# @xspect-build/packages
 
 Prebuilt [xPack](https://xpack.github.io/) binaries distributed via npm without requiring `xpm`.
 
