@@ -107,10 +107,11 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
+          set -e
           cd dist
           for pkg in */; do
             echo "Publishing $pkg..."
             cd "$pkg"
-            npm publish --access public || echo "Failed to publish $pkg"
+            npm publish --access public
             cd ..
           done
