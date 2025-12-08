@@ -47,6 +47,26 @@ function copyFile(src, dest) {
   fs.copyFileSync(src, dest);
 }
 
+function copyDir(src, dest) {
+  ensureDir(dest);
+  const entries = fs.readdirSync(src, { withFileTypes: true });
+  for (const entry of entries) {
+    const srcPath = path.join(src, entry.name);
+    const destPath = path.join(dest, entry.name);
+    if (entry.isDirectory()) {
+      copyDir(srcPath, destPath);
+    } else if (entry.isSymbolicLink()) {
+      const linkTarget = fs.readlinkSync(srcPath);
+      fs.symlinkSync(linkTarget, destPath);
+    } else {
+      fs.copyFileSync(srcPath, destPath);
+      // Preserve executable permissions
+      const stats = fs.statSync(srcPath);
+      fs.chmodSync(destPath, stats.mode);
+    }
+  }
+}
+
 function writeJson(filePath, data) {
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2) + '\n');
 }
@@ -108,12 +128,12 @@ async function buildPlatformPackage(packageName, platform, version) {
   });
 
   // Also create xpm init marker
-  run(`xpm init`, {
+  run(`npx xpm init`, {
     cwd: tempDir,
   });
 
   // Install the xpack using xpm
-  run(`xpm install ${config.xpackName}@${xpackVersion} --verbose`, {
+  run(`npx xpm install ${config.xpackName}@${xpackVersion} --verbose`, {
     cwd: tempDir,
   });
 
@@ -157,6 +177,18 @@ async function buildPlatformPackage(packageName, platform, version) {
     }
   }
 
+  // Copy libexec directory (contains dynamic libraries)
+  const contentDir = path.dirname(binSourceDir); // .content directory
+  const libexecSrcDir = path.join(contentDir, 'libexec');
+  const libexecDestDir = path.join(platformPackageDir, 'libexec');
+
+  if (fs.existsSync(libexecSrcDir)) {
+    copyDir(libexecSrcDir, libexecDestDir);
+    console.log(`Copied libexec to ${libexecDestDir}`);
+  } else {
+    console.log(`No libexec directory found at ${libexecSrcDir}, skipping...`);
+  }
+
   // Create platform package.json
   const platformPackageJson = {
     name: `${SCOPE}/${platformPackageName}`,
@@ -165,7 +197,7 @@ async function buildPlatformPackage(packageName, platform, version) {
     os: [os],
     cpu: [cpu],
     main: '',
-    files: ['bin'],
+    files: ['bin', 'libexec'],
     repository: {
       type: 'git',
       url: 'git+https://github.com/xspect-build/packages.git',

@@ -18,5 +18,8 @@
     "binary"
   ],
   "author": "xspect-build",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "xpm": "^0.21.4"
+  }
 }
