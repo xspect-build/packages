@@ -1,0 +1,5 @@
+[[package]]
+path = "packages/patchelf"
+name = "@xspect-build/patchelf"
+type = "npm"
+version = "0.18.1"
