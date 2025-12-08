@@ -1,0 +1,116 @@
+name: Build and Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: 'Package to build (e.g., patchelf)'
+        required: true
+        type: string
+      version:
+        description: 'Version to build (leave empty for latest)'
+        required: false
+        type: string
+      publish:
+        description: 'Publish to npm'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux-x64
+          - os: ubuntu-24.04-arm
+            platform: linux-arm64
+          - os: macos-latest
+            platform: darwin-arm64
+          - os: macos-15-intel
+            platform: darwin-x64
+
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install xpm
+        run: npm install -g xpm@latest
+
+      - name: Build platform package
+        run: node scripts/build-platform.js ${{ inputs.package }} ${{ matrix.platform }} ${{ inputs.version && format('--version {0}', inputs.version) || '' }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.package }}-${{ matrix.platform }}
+          path: dist/${{ inputs.package }}-${{ matrix.platform }}/
+
+  package:
+    needs: build
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist/
+
+      - name: Prepare main package
+        run: node scripts/prepare-main-package.js ${{ inputs.package }} ${{ inputs.version && format('--version {0}', inputs.version) || '' }}
+
+      - name: Upload main package
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.package }}
+          path: dist/${{ inputs.package }}/
+
+  publish:
+    if: ${{ inputs.publish }}
+    needs: package
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist/
+
+      - name: Publish packages
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          cd dist
+          for pkg in */; do
+            echo "Publishing $pkg..."
+            cd "$pkg"
+            npm publish --access public || echo "Failed to publish $pkg"
+            cd ..
+          done

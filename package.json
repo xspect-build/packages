@@ -1,0 +1,22 @@
+{
+  "name": "xpack-prebuilt",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Prebuilt xPack binaries distributed via npm",
+  "scripts": {
+    "build": "node scripts/build.js",
+    "build:platform": "node scripts/build-platform.js",
+    "prepare:main": "node scripts/prepare-main-package.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xspect-build/packages.git"
+  },
+  "keywords": [
+    "xpack",
+    "prebuilt",
+    "binary"
+  ],
+  "author": "xspect-build",
+  "license": "MIT"
+}

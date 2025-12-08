@@ -1,0 +1,28 @@
+{
+  "name": "@xspect-build/patchelf-PLATFORM",
+  "version": "VERSION",
+  "description": "Prebuilt NixOS PatchELF binary for PLATFORM",
+  "os": ["OS"],
+  "cpu": ["CPU"],
+  "main": "",
+  "files": [
+    "bin"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xspect-build/packages.git"
+  },
+  "keywords": [
+    "xpack",
+    "nixos",
+    "patchelf",
+    "prebuilt",
+    "binary"
+  ],
+  "author": "xspect-build",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/xspect-build/packages/issues"
+  },
+  "homepage": "https://github.com/xspect-build/packages#readme"
+}

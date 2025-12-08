@@ -1,0 +1,87 @@
+#!/usr/bin/env node
+
+/**
+ * This is a wrapper script that finds and executes the platform-specific patchelf binary.
+ * It looks for the binary in the optionalDependencies packages.
+ */
+
+const { execFileSync } = require('child_process');
+const path = require('path');
+const fs = require('fs');
+
+const platform = process.platform;
+const arch = process.arch;
+
+// Map to package names
+const platformPackageMap = {
+  'darwin-arm64': '@xspect-build/patchelf-darwin-arm64',
+  'darwin-x64': '@xspect-build/patchelf-darwin-x64',
+  'linux-arm64': '@xspect-build/patchelf-linux-arm64',
+  'linux-arm': '@xspect-build/patchelf-linux-arm',
+  'linux-x64': '@xspect-build/patchelf-linux-x64',
+};
+
+const platformKey = `${platform}-${arch}`;
+const packageName = platformPackageMap[platformKey];
+
+if (!packageName) {
+  console.error(`Unsupported platform: ${platformKey}`);
+  console.error(`Supported platforms: ${Object.keys(platformPackageMap).join(', ')}`);
+  process.exit(1);
+}
+
+// Try to find the binary
+function findBinary() {
+  // Look in node_modules relative to this script
+  const possiblePaths = [
+    // When installed as a dependency
+    path.join(__dirname, '..', 'node_modules', packageName, 'bin', 'patchelf'),
+    // When the package is hoisted
+    path.join(__dirname, '..', '..', packageName, 'bin', 'patchelf'),
+    // When in a monorepo or pnpm
+    path.join(__dirname, '..', '..', '.pnpm', 'node_modules', packageName, 'bin', 'patchelf'),
+  ];
+
+  for (const binPath of possiblePaths) {
+    if (fs.existsSync(binPath)) {
+      return binPath;
+    }
+  }
+
+  // Try require.resolve as fallback
+  try {
+    const packagePath = require.resolve(`${packageName}/package.json`);
+    const binPath = path.join(path.dirname(packagePath), 'bin', 'patchelf');
+    if (fs.existsSync(binPath)) {
+      return binPath;
+    }
+  } catch (e) {
+    // Package not found
+  }
+
+  return null;
+}
+
+const binaryPath = findBinary();
+
+if (!binaryPath) {
+  console.error(`Could not find patchelf binary for platform ${platformKey}`);
+  console.error(`The package ${packageName} may not be installed.`);
+  console.error('This could happen if:');
+  console.error('  1. Your platform is not supported');
+  console.error('  2. The optional dependency failed to install');
+  console.error('  3. You are using a package manager that does not install optional dependencies');
+  process.exit(1);
+}
+
+// Execute the binary with all arguments passed through
+try {
+  execFileSync(binaryPath, process.argv.slice(2), {
+    stdio: 'inherit',
+  });
+} catch (error) {
+  if (error.status !== undefined) {
+    process.exit(error.status);
+  }
+  throw error;
+}

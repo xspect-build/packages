@@ -1,0 +1,44 @@
+{
+  "name": "@xspect-build/patchelf",
+  "version": "0.18.0",
+  "description": "Prebuilt NixOS PatchELF binaries - npm install directly without xpm",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "bin": {
+    "patchelf": "bin/patchelf"
+  },
+  "scripts": {
+    "postinstall": "node lib/postinstall.js"
+  },
+  "files": [
+    "lib",
+    "bin"
+  ],
+  "optionalDependencies": {
+    "@xspect-build/patchelf-darwin-arm64": "0.18.0",
+    "@xspect-build/patchelf-darwin-x64": "0.18.0",
+    "@xspect-build/patchelf-linux-arm64": "0.18.0",
+    "@xspect-build/patchelf-linux-arm": "0.18.0",
+    "@xspect-build/patchelf-linux-x64": "0.18.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xspect-build/packages.git"
+  },
+  "keywords": [
+    "xpack",
+    "nixos",
+    "patchelf",
+    "prebuilt",
+    "binary"
+  ],
+  "author": "xspect-build",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/xspect-build/packages/issues"
+  },
+  "homepage": "https://github.com/xspect-build/packages#readme",
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
