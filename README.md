@@ -12,13 +12,14 @@ xPack provides excellent cross-platform prebuilt binaries for various developmen
 
 ## Available Packages
 
-| Package | Description | xPack Source |
-|---------|-------------|--------------|
+| Package | Description | Source |
+|---------|-------------|--------|
 | `@xspect-build/patchelf` | NixOS PatchELF | `@xpack-dev-tools/patchelf` |
+| `@xspect-build/python` | Prebuilt Python | [python-build-standalone](https://github.com/astral-sh/python-build-standalone) |
 
 ## Usage
 
-### Installation
+### patchelf
 
 ```bash
 npm install @xspect-build/patchelf
@@ -26,13 +27,13 @@ npm install @xspect-build/patchelf
 
 The appropriate binary for your platform will be installed automatically via optional dependencies.
 
-### Via npx
+#### Via npx
 
 ```bash
 npx patchelf --version
 ```
 
-### Via package.json scripts
+#### Via package.json scripts
 
 ```json
 {
@@ -42,7 +43,7 @@ npx patchelf --version
 }
 ```
 
-### Programmatic API
+#### Programmatic API
 
 ```javascript
 const { getPatchelfPath, isPatchelfAvailable, getBinDir } = require('@xspect-build/patchelf');
@@ -54,6 +55,40 @@ if (isPatchelfAvailable()) {
   console.log(result.toString());
 }
 ```
+
+### python
+
+Download and use prebuilt Python binaries from [python-build-standalone](https://github.com/astral-sh/python-build-standalone).
+
+```bash
+npm install @xspect-build/python
+```
+
+#### Programmatic API
+
+```javascript
+const { getPythonPath } = require('@xspect-build/python');
+const { execSync } = require('child_process');
+const path = require('path');
+
+// Download and extract Python (cached after first run)
+const pythonDir = getPythonPath({ version: 'python3.9.13' });
+
+// Get the Python executable
+const pythonBin = path.join(pythonDir, 'bin', 'python3');
+
+// Run Python
+const result = execSync(`${pythonBin} --version`);
+console.log(result.toString()); // Python 3.9.13
+```
+
+#### API
+
+- `getPythonPath(options)` - Download and extract Python, returns path to Python directory
+  - `options.version` (required) - npm dist-tag (e.g., `'python3.9.13'`)
+  - `options.dest` (optional) - Custom destination directory
+- `extract(dest, options)` - Extract Python to a specific directory
+- `download(version)` - Download and return the tar archive
 
 ## Supported Platforms
 

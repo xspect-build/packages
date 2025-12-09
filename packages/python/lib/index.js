@@ -46,7 +46,6 @@ function download(version) {
   
   // Download the package via npm pack
   execSync(`npm pack ${packageName}@${version}`, {
-    stdio: 'inherit',
     cwd,
     env: process.env,
   });
