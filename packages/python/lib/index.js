@@ -27,20 +27,14 @@ function getPlatformPackageName() {
 }
 
 /**
- * Get the default Python version tag
- * Can be overridden by PYTHON_VERSION environment variable
- * Format: python3.9.13 (npm dist-tag)
- */
-function getDefaultVersion() {
-  return process.env.PYTHON_VERSION || 'python3.9.13';
-}
-
-/**
  * Download the Python package and return the tar archive
- * @param {string} version - Package version or dist-tag (e.g., 'python3.9.13')
+ * @param {string} version - Package version or dist-tag (e.g., 'python3.9.13'), required
  * @returns {Archive} The tar archive object
  */
 function download(version) {
+  if (!version) {
+    throw new Error('version is required');
+  }
   const packageName = getPlatformPackageName();
   if (!packageName) {
     throw new Error(`Unsupported platform: ${platform}-${arch}. Supported: ${Object.keys(platformPackageMap).join(', ')}`);
@@ -80,11 +74,14 @@ function download(version) {
  * Extract Python to destination directory
  * @param {string} dest - Destination directory
  * @param {Object} options - Options
- * @param {string} options.version - Package version or dist-tag (e.g., 'python3.9.13'), defaults to PYTHON_VERSION env
+ * @param {string} options.version - Package version or dist-tag (e.g., 'python3.9.13'), required
  * @returns {string} Path to the Python directory (containing bin, lib, etc.)
  */
 function extract(dest, options = {}) {
-  const version = options.version || getDefaultVersion();
+  const version = options.version;
+  if (!version) {
+    throw new Error('options.version is required');
+  }
   const destPath = dest || path.join(CACHE_DIR, version);
   const pythonDir = path.join(destPath, 'package', 'python');
   const markerFile = path.join(destPath, 'package.json');
@@ -109,13 +106,15 @@ function extract(dest, options = {}) {
 /**
  * Get Python path, downloading if necessary
  * @param {object} options - Options
- * @param {string} options.version - Package version or dist-tag (e.g., 'python3.9.13'), defaults to PYTHON_VERSION env
+ * @param {string} options.version - Package version or dist-tag (e.g., 'python3.9.13'), required
  * @param {string} options.dest - Custom destination directory (optional)
  * @returns {string} Path to the Python directory
  */
 function getPythonPath(options = {}) {
-  const version = options.version || getDefaultVersion();
-  return extract(options.dest, { version });
+  if (!options.version) {
+    throw new Error('options.version is required');
+  }
+  return extract(options.dest, { version: options.version });
 }
 
 /**
@@ -140,10 +139,8 @@ function fixPermissions(dir) {
 }
 
 module.exports = {
-  version: getDefaultVersion(),
   download,
   extract,
   getPythonPath,
   getPlatformPackageName,
-  getDefaultVersion,
 };

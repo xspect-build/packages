@@ -70,6 +70,9 @@ jobs:
         with:
           path: dist/
 
+      - name: Prepare main package
+        run: node scripts/prepare-main-package.js python
+
       - name: Publish packages
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
