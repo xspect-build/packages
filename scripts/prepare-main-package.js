@@ -5,10 +5,10 @@
  * This script is designed to run in CI after downloading all platform artifacts.
  * 
  * Usage:
- *   node scripts/prepare-main-package.js <package-name> [--version <version>]
+ *   node scripts/prepare-main-package.js <package-name>
  * 
  * Example:
- *   node scripts/prepare-main-package.js patchelf --version 0.18.0
+ *   node scripts/prepare-main-package.js patchelf
  */
 
 const fs = require('fs');
@@ -17,13 +17,19 @@ const { execSync } = require('child_process');
 
 const SCOPE = '@xspect-build';
 
-const PLATFORMS = [
-  'darwin-arm64',
-  'darwin-x64',
-  'linux-arm64',
-  'linux-arm',
-  'linux-x64',
-];
+// Platform configurations per package
+const PACKAGE_PLATFORMS = {
+  patchelf: [
+    'darwin-arm64',
+    'darwin-x64',
+    'linux-arm64',
+    'linux-x64',
+  ],
+  python: [
+    'linux-x64',
+    'linux-arm64',
+  ],
+};
 
 function ensureDir(dir) {
   if (!fs.existsSync(dir)) {
@@ -40,6 +46,13 @@ function readJson(filePath) {
 }
 
 function prepareMainPackage(packageName) {
+  const platforms = PACKAGE_PLATFORMS[packageName];
+  if (!platforms) {
+    console.error(`Unknown package: ${packageName}`);
+    console.error(`Available packages: ${Object.keys(PACKAGE_PLATFORMS).join(', ')}`);
+    process.exit(1);
+  }
+
   const distDir = path.join(__dirname, '..', 'dist');
   const sourcePackageDir = path.join(__dirname, '..', 'packages', packageName);
   const mainPackageDir = path.join(distDir, packageName);
@@ -69,9 +82,9 @@ function prepareMainPackage(packageName) {
 
   packageJson.version = baseVersion;
 
-  // Inject optionalDependencies for all platforms
+  // Inject optionalDependencies for supported platforms
   packageJson.optionalDependencies = {};
-  for (const platform of PLATFORMS) {
+  for (const platform of platforms) {
     packageJson.optionalDependencies[`${SCOPE}/${packageName}-${platform}`] = baseVersion;
   }
 
