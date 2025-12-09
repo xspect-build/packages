@@ -13,21 +13,21 @@ export function getPlatformPackageName(): string | null;
 /**
  * Get the default Python version tag
  * Can be overridden by PYTHON_VERSION environment variable
- * Format: v3.9.13 (npm dist-tag)
+ * Format: python3.9.13 (npm dist-tag)
  */
 export function getDefaultVersion(): string;
 
 /**
  * Download the Python package and return the tar archive
- * @param version - Package version or dist-tag (e.g., 'v3.9.13')
+ * @param version - Package version or dist-tag (e.g., 'python3.9.13')
  * @returns The tar archive object
  */
 export function download(version: string): Archive;
 
 export interface ExtractOptions {
   /**
-   * Package version or dist-tag (e.g., 'v3.9.13')
-   * Defaults to PYTHON_VERSION env or 'v3.9.13'
+   * Package version or dist-tag (e.g., 'python3.9.13')
+   * Defaults to PYTHON_VERSION env or 'python3.9.13'
    */
   version?: string;
 }
@@ -42,8 +42,8 @@ export function extract(dest?: string | null, options?: ExtractOptions): string;
 
 export interface GetPythonPathOptions {
   /**
-   * Package version or dist-tag (e.g., 'v3.9.13')
-   * Defaults to PYTHON_VERSION env or 'v3.9.13'
+   * Package version or dist-tag (e.g., 'python3.9.13')
+   * Defaults to PYTHON_VERSION env or 'python3.9.13'
    */
   version?: string;
   /**

@@ -52,6 +52,40 @@ function writeJson(filePath, data) {
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2) + '\n');
 }
 
+/**
+ * Recursively replace symlinks with copies of the target file
+ * npm publish doesn't preserve symlinks, so we need to convert them
+ */
+function replaceSymlinks(dir) {
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name);
+    
+    if (entry.isSymbolicLink()) {
+      const target = fs.readlinkSync(fullPath);
+      const targetPath = path.resolve(dir, target);
+      
+      // Remove the symlink
+      fs.unlinkSync(fullPath);
+      
+      // Copy the target file/directory
+      if (fs.existsSync(targetPath)) {
+        const stat = fs.statSync(targetPath);
+        if (stat.isDirectory()) {
+          fs.cpSync(targetPath, fullPath, { recursive: true });
+        } else {
+          fs.copyFileSync(targetPath, fullPath);
+          // Preserve executable permission
+          fs.chmodSync(fullPath, stat.mode);
+        }
+      }
+    } else if (entry.isDirectory()) {
+      replaceSymlinks(fullPath);
+    }
+  }
+}
+
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
 }
@@ -112,6 +146,10 @@ async function buildPythonPackage(platform, release) {
   
   console.log(`Extracting to ${pythonDir}...`);
   run(`tar -xzf "${tarPath}" -C "${pythonDir}" --strip-components=1`);
+
+  // Replace symlinks with real files (npm publish doesn't preserve symlinks)
+  console.log('Replacing symlinks with real files...');
+  replaceSymlinks(pythonDir);
 
   // Create platform package.json
   const platformPackageJson = {

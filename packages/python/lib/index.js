@@ -37,7 +37,7 @@ function getDefaultVersion() {
 
 /**
  * Download the Python package and return the tar archive
- * @param {string} version - Package version or dist-tag (e.g., 'v3.9.13')
+ * @param {string} version - Package version or dist-tag (e.g., 'python3.9.13')
  * @returns {Archive} The tar archive object
  */
 function download(version) {
@@ -79,8 +79,8 @@ function download(version) {
 /**
  * Extract Python to destination directory
  * @param {string} dest - Destination directory
- * @param {object} options - Options
- * @param {string} options.version - Package version or dist-tag (e.g., 'v3.9.13'), defaults to PYTHON_VERSION env
+ * @param {Object} options - Options
+ * @param {string} options.version - Package version or dist-tag (e.g., 'python3.9.13'), defaults to PYTHON_VERSION env
  * @returns {string} Path to the Python directory (containing bin, lib, etc.)
  */
 function extract(dest, options = {}) {
@@ -109,7 +109,7 @@ function extract(dest, options = {}) {
 /**
  * Get Python path, downloading if necessary
  * @param {object} options - Options
- * @param {string} options.version - Package version or dist-tag (e.g., 'v3.9.13'), defaults to PYTHON_VERSION env
+ * @param {string} options.version - Package version or dist-tag (e.g., 'python3.9.13'), defaults to PYTHON_VERSION env
  * @param {string} options.dest - Custom destination directory (optional)
  * @returns {string} Path to the Python directory
  */
