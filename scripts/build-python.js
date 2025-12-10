@@ -151,6 +151,22 @@ async function buildPythonPackage(platform, release) {
   console.log('Replacing symlinks with real files...');
   replaceSymlinks(pythonDir);
 
+  // Build bin entries dynamically from the bin directory
+  const binDir = path.join(pythonDir, 'bin');
+  const binEntries = {};
+  if (fs.existsSync(binDir)) {
+    const binFiles = fs.readdirSync(binDir);
+    for (const file of binFiles) {
+      const filePath = path.join(binDir, file);
+      const stat = fs.statSync(filePath);
+      // Only include executable files, skip *-config files
+      if (stat.isFile() && (stat.mode & 0o111) && !file.endsWith('-config')) {
+        binEntries[file] = `python/bin/${file}`;
+      }
+    }
+  }
+  console.log(`Found ${Object.keys(binEntries).length} bin entries: ${Object.keys(binEntries).join(', ')}`);
+
   // Create platform package.json
   const platformPackageJson = {
     name: `${SCOPE}/${platformPackageName}`,
@@ -159,6 +175,7 @@ async function buildPythonPackage(platform, release) {
     os: [os],
     cpu: [cpu],
     main: '',
+    bin: binEntries,
     files: ['python'],
     repository: {
       type: 'git',
