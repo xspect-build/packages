@@ -3,3 +3,9 @@ path = "packages/patchelf"
 name = "@xspect-build/patchelf"
 type = "npm"
 version = "0.18.2"
+
+[[package]]
+path = "packages/python"
+name = "@xspect-build/python"
+type = "npm"
+version = "1.0.2"
