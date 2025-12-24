@@ -48,6 +48,7 @@ function download(version) {
   execSync(`npm pack ${packageName}@${version}`, {
     cwd,
     env: process.env,
+    stdio: 'ignore',
   });
 
   // Find the downloaded tgz file
